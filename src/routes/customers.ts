@@ -1,11 +1,11 @@
 import express from "express";
-import Customer from "../models/customer";
+import Customer from "../models/customers";
 import { Request, Response } from "express";
 import { isEmpty } from "lodash";
 
-const customerRouter = express.Router();
+const customersRouter = express.Router();
 
-customerRouter.get("/", async (req: Request, res: Response) => {
+customersRouter.get("/", async (req: Request, res: Response) => {
   try {
     const customers = await Customer.find();
     return !isEmpty(customers)
@@ -17,7 +17,7 @@ customerRouter.get("/", async (req: Request, res: Response) => {
   }
 });
 
-customerRouter.get("/:_id", async (req: Request, res: Response) => {
+customersRouter.get("/:_id", async (req: Request, res: Response) => {
   try {
     const { _id } = req.params;
     if (!_id) throw new Error("id not Found");
@@ -30,7 +30,7 @@ customerRouter.get("/:_id", async (req: Request, res: Response) => {
   }
 });
 
-customerRouter.post("/", async (req: Request, res: Response) => {
+customersRouter.post("/", async (req: Request, res: Response) => {
   try {
     const { isGold, name, phone } = req.body;
     const newCustomer = await new Customer({
@@ -51,7 +51,7 @@ customerRouter.post("/", async (req: Request, res: Response) => {
   }
 });
 
-customerRouter.put("/", async (req: Request, res: Response) => {
+customersRouter.put("/", async (req: Request, res: Response) => {
   try {
     const { _id, name, isGold, phone } = req.body;
     if (!_id) throw new Error("id not Found");
@@ -70,7 +70,7 @@ customerRouter.put("/", async (req: Request, res: Response) => {
   }
 });
 
-customerRouter.put("/:_id", async (req: Request, res: Response) => {
+customersRouter.put("/:_id", async (req: Request, res: Response) => {
   try {
     const { _id } = req.params;
     if (!_id) throw new Error("id not Found");
@@ -91,7 +91,7 @@ customerRouter.put("/:_id", async (req: Request, res: Response) => {
   }
 });
 
-customerRouter.delete("/", async (req: Request, res: Response) => {
+customersRouter.delete("/", async (req: Request, res: Response) => {
   try {
     const { _id } = req.body;
     if (!_id) throw new Error("id not Found");
@@ -103,7 +103,7 @@ customerRouter.delete("/", async (req: Request, res: Response) => {
   }
 });
 
-customerRouter.delete("/:_id", async (req: Request, res: Response) => {
+customersRouter.delete("/:_id", async (req: Request, res: Response) => {
   try {
     const { _id } = req.params;
     if (!_id) throw new Error("id not Found");
@@ -115,4 +115,4 @@ customerRouter.delete("/:_id", async (req: Request, res: Response) => {
   }
 });
 
-export default customerRouter;
+export default customersRouter;
