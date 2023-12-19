@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import Rental from "../models/rentals";
 import { isEmpty } from "lodash";
-import Movie, { IMoviesDoc, IMoviesModel } from "../models/movies";
+import Movie from "../models/movies";
 import Customer from "../models/customers";
 
 const rentalsRouter = express.Router();
@@ -25,21 +25,19 @@ rentalsRouter.post("/", async (req: Request, res: Response) => {
     if (!movie || !customer) throw new Error("Invalid movieId or customerId");
     if (movie.numberInStock < 1)
       throw new Error("SORRY!!! This movie is out of stock at the moment");
-    const movieUpdation = await Movie.findOneAndUpdate(
-      { _id: movieId },
-      {
-        numberInStock: movie.numberInStock - 1,
-      }
-    );
+    movie.numberInStock--;
+    await movie.save();
     const newRental = new Rental({
       movie: {
         title: movie.title,
         dailyRentalRate: movie.dailyRentalRate,
+        _id: movie._id,
       },
       customer: {
         isGold: customer.isGold,
         name: customer.name,
         phone: customer.phone,
+        _id: customer._id,
       },
     });
     const result = await newRental.save();
@@ -60,13 +58,22 @@ rentalsRouter.post("/:_id", async (req: Request, res: Response) => {
     const rental: any = await Rental.findById(_id);
 
     if (!rental) throw new Error("Rental not found against the provided id");
-    if (rental.dateReturned) throw new Error("This book is already returned");
-    // res.send(rental);
+    if (rental.dateReturned || rental.rentalFee)
+      throw new Error("This book is already returned");
     const fee = Math.floor(
       (rental.movie.dailyRentalRate *
-        (86400000 + 86400000 + rental.dateOut.getTime() - Date.now())) /
+        (86400000 +
+          86400000 +
+          86400000 +
+          86400000 +
+          rental.dateOut.getTime() -
+          Date.now())) /
         86400000
     );
+
+    const movie: any = await Movie.findById(rental.movie._id);
+    movie.numberInStock++;
+    await movie.save();
 
     const result = await Rental.findByIdAndUpdate(_id, {
       dateReturned: Date.now(),
