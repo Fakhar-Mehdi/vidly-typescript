@@ -61,13 +61,7 @@ rentalsRouter.post("/:_id", async (req: Request, res: Response) => {
     if (rental.dateReturned || rental.rentalFee)
       throw new Error("This book is already returned");
     const fee = Math.floor(
-      (rental.movie.dailyRentalRate *
-        (86400000 +
-          86400000 +
-          86400000 +
-          86400000 +
-          rental.dateOut.getTime() -
-          Date.now())) /
+      (rental.movie.dailyRentalRate * (rental.dateOut.getTime() - Date.now())) /
         86400000
     );
 
