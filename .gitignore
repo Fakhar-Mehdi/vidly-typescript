@@ -15,3 +15,5 @@ tsconfig.json
 
 # Dependency directories
 npm-debug.log
+
+.env

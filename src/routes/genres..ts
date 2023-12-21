@@ -2,6 +2,8 @@ import express from "express";
 import { isEmpty } from "lodash";
 import Genre from "../models/genres";
 import { Request, Response } from "express";
+import authenticateUser from "../middleware/authenticateUser";
+import authenticateAdmin from "../middleware/authenticateAdmin";
 
 const genreRouter = express.Router();
 
@@ -30,7 +32,7 @@ genreRouter.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-genreRouter.post("/", async (req: Request, res: Response) => {
+genreRouter.post("/", authenticateUser, async (req: Request, res: Response) => {
   try {
     //validate genre
     const genre = new Genre({ genre: req.body.name });
@@ -48,7 +50,7 @@ genreRouter.post("/", async (req: Request, res: Response) => {
   }
 });
 
-genreRouter.put("/", async (req: Request, res: Response) => {
+genreRouter.put("/", authenticateUser, async (req: Request, res: Response) => {
   try {
     const { _id, name } = req.body;
     // validate id
@@ -59,7 +61,9 @@ genreRouter.put("/", async (req: Request, res: Response) => {
       { genre: name }
     );
     // send response
-    res.send(`${previousGenre} is now successfully updated with provided values.`);
+    res.send(
+      `${previousGenre} is now successfully updated with provided values.`
+    );
   } catch (e: any) {
     console.log(
       `Unable to update the customer.\nFollowing Error Occurred: ${e.message}`
@@ -70,54 +74,68 @@ genreRouter.put("/", async (req: Request, res: Response) => {
   }
 });
 
-genreRouter.put("/:_id", async (req: Request, res: Response) => {
-  const { _id } = req.params;
-  const { name } = req.body;
-  try {
-    //validate id
-    if (!_id) throw new Error("id not Found");
-    //update
-    const previousGenre = await Genre.findByIdAndUpdate(_id, { genre: name });
-    //send response
-    res.send(`${previousGenre} is now successfully updated with provided values.`);
-  } catch (e: any) {
-    console.log(
-      `Unable to update the customer.\nFollowing Error Occurred: ${e.message}`
-    );
-    res.send(
-      `Unable to update the customer.\nFollowing Error Occurred: ${e.message}`
-    );
+genreRouter.put(
+  "/:_id",
+  authenticateUser,
+  async (req: Request, res: Response) => {
+    const { _id } = req.params;
+    const { name } = req.body;
+    try {
+      //validate id
+      if (!_id) throw new Error("id not Found");
+      //update
+      const previousGenre = await Genre.findByIdAndUpdate(_id, { genre: name });
+      //send response
+      res.send(
+        `${previousGenre} is now successfully updated with provided values.`
+      );
+    } catch (e: any) {
+      console.log(
+        `Unable to update the customer.\nFollowing Error Occurred: ${e.message}`
+      );
+      res.send(
+        `Unable to update the customer.\nFollowing Error Occurred: ${e.message}`
+      );
+    }
   }
-});
+);
 
-genreRouter.delete("/:_id", async (req: Request, res: Response) => {
-  const { _id } = req.params;
-  try {
-    //validateId
-    if (!_id) throw new Error("id not Found");
-    //remove
-    const result = await Genre.deleteOne({ _id });
-    //send response
-    res.send(`${result} is now successfully deleted`);
-  } catch (e: any) {
-    console.log(`Id not Found\nFollowing error occurred: ${e.message}`);
-    res.send(`Id not Found\nFollowing error occurred: ${e.message}`);
+genreRouter.delete(
+  "/:_id",
+  [authenticateUser, authenticateAdmin],
+  async (req: Request, res: Response) => {
+    const { _id } = req.params;
+    try {
+      //validateId
+      if (!_id) throw new Error("id not Found");
+      //remove
+      const result = await Genre.deleteOne({ _id });
+      //send response
+      res.send(`${result} is now successfully deleted`);
+    } catch (e: any) {
+      console.log(`Id not Found\nFollowing error occurred: ${e.message}`);
+      res.send(`Id not Found\nFollowing error occurred: ${e.message}`);
+    }
   }
-});
+);
 
-genreRouter.delete("/", async (req: Request, res: Response) => {
-  const { _id } = req.body;
-  try {
-    //validateId
-    if (!_id) throw new Error("id not Found");
-    //remove
-    const result = await Genre.findOneAndDelete({ _id });
-    //send response
-    res.send(`${result} is now successfully deleted`);
-  } catch (e: any) {
-    console.log(`Id not Found\nFollowing error occurred: ${e.message}`);
-    res.send(`Id not Found\nFollowing error occurred: ${e.message}`);
+genreRouter.delete(
+  "/",
+  [authenticateUser, authenticateAdmin],
+  async (req: Request, res: Response) => {
+    const { _id } = req.body;
+    try {
+      //validateId
+      if (!_id) throw new Error("id not Found");
+      //remove
+      const result = await Genre.findOneAndDelete({ _id });
+      //send response
+      res.send(`${result} is now successfully deleted`);
+    } catch (e: any) {
+      console.log(`Id not Found\nFollowing error occurred: ${e.message}`);
+      res.send(`Id not Found\nFollowing error occurred: ${e.message}`);
+    }
   }
-});
+);
 
 export default genreRouter;
