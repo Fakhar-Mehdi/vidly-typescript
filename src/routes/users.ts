@@ -3,32 +3,34 @@ import User from "../models/users";
 import { pick } from "lodash";
 import bcrypt from "bcrypt";
 import authenticateUser from "../middleware/authenticateUser";
+import { asyncMiddlewareFunction } from "../middleware/asyncMiddlewareFunction";
+import { throwException } from "../helper";
 
 const usersRouter = express.Router();
 
-usersRouter.get("/me", authenticateUser, async (req: any, res: Response) => {
-  try {
-    if (!req.user) {
-      res.status(500);
-      throw new Error("Internal Server Error");
-    }
+usersRouter.get(
+  "/me",
+  authenticateUser,
+  asyncMiddlewareFunction(async (req: any, res: Response) => {
+    if (!req.user) throwException(res);
     const user = await User.findById(req.user._id).select("-password -__v");
-    if (!user) throw new Error("Internal Server Error");
+    if (!user) throwException(res);
     res.send(`\nThis is your information: ${JSON.stringify(user)}`);
-  } catch (e: any) {
-    if (res.statusCode === 200) res.status(500);
-    console.log(`ERROR: ${e.message}`);
-    res.send(`ERROR: ${e.message}`);
-  }
-});
+  })
+);
 
-usersRouter.post("/", async (req: Request, res: Response) => {
-  try {
+usersRouter.post(
+  "/",
+  asyncMiddlewareFunction(async (req: Request, res: Response) => {
     const { name, email, password, isAdmin } = req.body;
     if (!name || !email || !password)
-      throw new Error("Please provide Name, Email and Password and try again");
+      throwException(
+        res,
+        "Please provide Name, Email and Password and try again",
+        400
+      );
     let user: any = await User.findOne({ email });
-    if (user) throw new Error("User Already Created");
+    if (user) throwException(res, "User Already Created", 405);
     user = new User({
       name,
       email,
@@ -45,10 +47,7 @@ usersRouter.post("/", async (req: Request, res: Response) => {
         pick(user, ["_id", "name", "email"])
       )}`
     );
-  } catch (e: any) {
-    console.log(`ERROR: ${e.message}`);
-    res.send(`ERROR: ${e.message}`);
-  }
-});
+  })
+);
 
 export default usersRouter;

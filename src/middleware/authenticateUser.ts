@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
+import w from "winston";
 
 const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -14,7 +15,7 @@ const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
     next();
   } catch (e: any) {
     if (res.statusCode === 200) res.status(400);
-    console.log(`Invalid Token\nERROR: ${e.message}`);
+    w.error(`Invalid Token\nERROR: ${e.message}`);
     res.send(`Invalid Token\nERROR: ${e.message} `);
   }
 };

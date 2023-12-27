@@ -1,33 +1,24 @@
 import express, { Request, Response } from "express";
-import Joi from "joi";
 import User from "../models/users";
 import bcrypt from "bcrypt";
+import { asyncMiddlewareFunction } from "../middleware/asyncMiddlewareFunction";
+import { throwException, validateCredentials } from "../helper";
 
 const loginRouter = express.Router();
 
-loginRouter.post("/", async (req: Request, res: Response) => {
-  try {
+loginRouter.post(
+  "/",
+  asyncMiddlewareFunction(async (req: Request, res: Response) => {
     const { error } = validateCredentials(req.body);
-    if (error) throw new Error("invalid Email or Pasword");
+    if (error) throwException(res, "invalid Email or Pasword", 400);
     const { email, password } = req.body;
     const user: any = await User.findOne({ email });
-    if (!user) throw new Error("invalid Email");
+    if (!user) throwException(res, "invalid Email or Pasword", 404);
     const isMatched = await bcrypt.compare(password, user.password);
-    if (!isMatched) throw new Error("invalid Email or Password");
+    if (!isMatched) throwException(res, "invalid Email or Pasword", 404);
     const token = user.getAuthenticationToken();
     res.header("x-auth-token", token).send(`Login Successful`);
-  } catch (e: any) {
-    console.log(`ERROR: ${e.message}`);
-    res.send(`ERROR: ${e.message}`);
-  }
-});
-
-const validateCredentials = (input: any) => {
-  const schema = Joi.object({
-    email: Joi.string().min(5).max(255).required().email(),
-    password: Joi.string().min(5).max(1024).required(),
-  });
-  return schema.validate(input);
-};
+  })
+);
 
 export default loginRouter;
